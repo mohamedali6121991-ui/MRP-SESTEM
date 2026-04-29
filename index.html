@@ -2,183 +2,128 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تخطيط الإنتاج - سوفي باك</title>
+    <title>نظام إدارة سلاسل الإمداد - المتقدم</title>
     <style>
-        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --danger: #e74c3c; --warning: #f1c40f; --success: #27ae60; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f9; margin: 0; padding: 20px; color: var(--primary); }
-        .container { max-width: 1400px; margin: auto; }
-        .machine-card { background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; overflow-x: auto; border-top: 5px solid var(--accent); }
-        .machine-header { background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
-        .machine-title { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
-        .capacity-input { display: flex; align-items: center; gap: 10px; }
-        
-        table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
-        th { background: var(--secondary); color: white; padding: 12px; font-size: 0.85rem; }
-        td { border: 1px solid #eee; padding: 8px; text-align: center; }
-        
-        input { border: 1px solid #ddd; padding: 6px; border-radius: 4px; text-align: center; width: 85px; }
-        .alert-low { background-color: #ffdada !important; color: #c0392b; font-weight: bold; }
-        .alert-warning { background-color: #fff4d1 !important; }
-        
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
-        .status-ok { background: var(--success); color: white; }
-        .status-buy { background: var(--danger); color: white; }
-
-        .summary-bar { background: var(--primary); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-action { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-save { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; }
+        .controls { background: #eef2f3; padding: 15px; margin-bottom: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th { background: #34495e; color: white; padding: 10px; text-align: center; }
+        td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        input { width: 90%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+        .shortage { background-color: #ffcccc !important; color: #b30000; font-weight: bold; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-add { background: #27ae60; }
+        .btn-calc { background: #2980b9; }
+        .btn-del { background: #e74c3c; padding: 5px 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="summary-bar">
-        <span>📦 نظام الرقابة على المخزون - سوفي باك</span>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-save" onclick="saveData()">💾 حفظ البيانات</button>
-            <button class="btn-action" onclick="calculateAll()">🔄 تحديث الحسابات</button>
-        </div>
+    <h2>نظام تخطيط الاحتياجات والمشتريات (MRP)</h2>
+    
+    <div class="controls">
+        <label>تاريخ مرجع المخزون: </label>
+        <input type="date" id="baseDate" style="width: 150px;">
+        <button class="btn btn-add" onclick="addRow()">+ إضافة خامة</button>
+        <button class="btn btn-calc" onclick="calculate()">🔄 حساب الموقف (MRP)</button>
     </div>
 
-    <div id="machinesContainer"></div>
+    <table id="mrpTable">
+        <thead>
+            <tr>
+                <th>المادة الخام</th>
+                <th>الطاقة (طن)</th>
+                <th>النسبة %</th>
+                <th>يومي</th>
+                <th>المخزون الحالي</th>
+                <th>تعاقد (بري)</th>
+                <th>تاريخ وصول (بري)</th>
+                <th>تعاقد (بحري)</th>
+                <th>تاريخ وصول (بحري)</th>
+                <th>العجز (بري)</th>
+                <th>العجز (بحري)</th>
+                <th>-</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
 </div>
 
 <script>
-    const machines = [
-        { name: "ماكينة أفلام البولى بروبلين PP", cap: 480, mats: ["HOMO", "CO Polymer", "AS", "AB", "SLIP", "MB white"] },
-        { name: "ماكينة أفلام PE", cap: 240, mats: ["LLDPE M1", "LLDPE M2", "LDPE 0.75", "LDPE 2", "Metallocene", "AS", "AB", "SLIP", "PR", "MB White"] },
-        { name: "ماكينة غطاء CSD", cap: 150, mats: ["HDPE", "Color MB"] },
-        { name: "ماكينة غطاء WD", cap: 88, mats: ["HDPE", "Color MB"] },
-        { name: "ماكينة سحب شيت PP", cap: 180, mats: ["Homo", "تكسير PP", "تلك", "Color MB"] },
-        { name: "ماكينة سحب شيت PET", cap: 200, mats: ["PET", "فلاكس", "تكسير"] }
-    ];
+    function addRow() {
+        const tbody = document.getElementById('tableBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" placeholder="اسم الخامة"></td>
+            <td><input type="number" class="cap" value="480"></td>
+            <td><input type="number" class="ratio" value="10"></td>
+            <td class="dailyReq">0</td>
+            <td><input type="number" class="stock" value="0"></td>
+            <td><input type="number" class="landQty" value="0"></td>
+            <td><input type="date" class="landDate"></td>
+            <td><input type="number" class="seaQty" value="0"></td>
+            <td><input type="date" class="seaDate"></td>
+            <td class="gapLand">-</td>
+            <td class="gapSea">-</td>
+            <td><button class="btn btn-del" onclick="this.parentElement.parentElement.remove()">X</button></td>
+        `;
+        tbody.appendChild(row);
+    }
 
-    function init() {
-        const container = document.getElementById('machinesContainer');
-        container.innerHTML = ''; 
-        machines.forEach((m, mIdx) => {
-            let html = `
-                <div class="machine-card">
-                    <div class="machine-header">
-                        <div class="machine-title">${m.name}</div>
-                        <div class="capacity-input">
-                            طاقة شهرية: <input type="number" class="m-cap" value="${m.cap}" id="cap-${mIdx}"> طن
-                            | يومي: <span id="daily-val-${mIdx}">0</span> طن
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>الخامة</th>
-                                <th>النسبة %</th>
-                                <th>طلب يومي</th>
-                                <th>المخزون</th>
-                                <th>كفاية (يوم)</th>
-                                <th>الأمان</th>
-                                <th>تعاقدات</th>
-                                <th>التغطية النهائية</th>
-                                <th>القرار</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
+    function calculate() {
+        const baseDate = new Date(document.getElementById('baseDate').value || new Date());
+        const rows = document.querySelectorAll('#tableBody tr');
+
+        rows.forEach(row => {
+            const cap = parseFloat(row.querySelector('.cap').value);
+            const ratio = parseFloat(row.querySelector('.ratio').value) / 100;
+            const stock = parseFloat(row.querySelector('.stock').value);
             
-            m.mats.forEach((mat, matIdx) => {
-                const idPrefix = `${mIdx}-${matIdx}`;
-                html += `
-                    <tr class="mat-row">
-                        <td><strong>${mat}</strong></td>
-                        <td><input type="number" class="ratio" value="0" id="ratio-${idPrefix}"></td>
-                        <td id="daily-req-${idPrefix}">0</td>
-                        <td><input type="number" class="stock" value="0" id="stock-${idPrefix}"></td>
-                        <td id="stock-days-${idPrefix}">0</td>
-                        <td><input type="number" class="safety" value="5" id="safety-${idPrefix}"></td>
-                        <td><input type="number" class="incoming" value="0" id="incoming-${idPrefix}"></td>
-                        <td id="final-date-${idPrefix}">-</td>
-                        <td id="decision-${idPrefix}">-</td>
-                    </tr>`;
-            });
-            html += `</tbody></table></div>`;
-            container.innerHTML += html;
-        });
-        loadData(); // تحميل البيانات بعد بناء الجدول
-    }
+            const dailyReq = (cap / 30) * ratio;
+            row.querySelector('.dailyReq').innerText = dailyReq.toFixed(2);
 
-    function calculateAll() {
-        const today = new Date();
-        machines.forEach((m, mIdx) => {
-            const monthlyCap = parseFloat(document.getElementById(`cap-${mIdx}`).value) || 0;
-            const dailyCap = monthlyCap / 30;
-            document.getElementById(`daily-val-${mIdx}`).innerText = dailyCap.toFixed(2);
+            const daysStockCover = stock / dailyReq;
+            const stockDepletionDate = new Date(baseDate);
+            stockDepletionDate.setDate(stockDepletionDate.getDate() + daysStockCover);
 
-            m.mats.forEach((mat, matIdx) => {
-                const idPrefix = `${mIdx}-${matIdx}`;
-                const ratio = parseFloat(document.getElementById(`ratio-${idPrefix}`).value) / 100 || 0;
-                const stock = parseFloat(document.getElementById(`stock-${idPrefix}`).value) || 0;
-                const safety = parseFloat(document.getElementById(`safety-${idPrefix}`).value) || 0;
-                const incoming = parseFloat(document.getElementById(`incoming-${idPrefix}`).value) || 0;
-
-                const dailyNeed = dailyCap * ratio;
-                document.getElementById(`daily-req-${idPrefix}`).innerText = dailyNeed.toFixed(3);
-
-                const row = document.getElementById(`ratio-${idPrefix}`).closest('tr');
-
-                if (dailyNeed > 0) {
-                    const daysStock = stock / dailyNeed;
-                    const finalDays = (stock + incoming) / dailyNeed;
-                    
-                    document.getElementById(`stock-days-${idPrefix}`).innerText = Math.floor(daysStock);
-                    document.getElementById(`final-date-${idPrefix}`).innerText = formatDate(today, finalDays);
-
-                    const decisionCell = document.getElementById(`decision-${idPrefix}`);
-
-                    if (daysStock <= safety) {
-                        row.className = 'mat-row alert-low';
-                        decisionCell.innerHTML = `<span class="badge status-buy">شراء فوري</span>`;
-                    } else if (daysStock <= (safety + 3)) {
-                        row.className = 'mat-row alert-warning';
-                        decisionCell.innerHTML = `<span class="badge" style="background:#f39c12; color:white;">انتباه</span>`;
-                    } else {
-                        row.className = 'mat-row';
-                        decisionCell.innerHTML = `<span class="badge status-ok">آمن</span>`;
-                    }
-                }
-            });
-        });
-    }
-
-    function formatDate(date, days) {
-        if (!days || days <= 0) return "-";
-        let d = new Date(date);
-        d.setDate(d.getDate() + Math.floor(days));
-        return d.toLocaleDateString('ar-EG');
-    }
-
-    // وظائف الحفظ (Local Storage)
-    function saveData() {
-        const inputs = document.querySelectorAll('input');
-        const data = {};
-        inputs.forEach(input => { data[input.id] = input.value; });
-        localStorage.setItem('sofiPackData', JSON.stringify(data));
-        alert('تم حفظ البيانات بنجاح على هذا الجهاز');
-        calculateAll();
-    }
-
-    function loadData() {
-        const saved = localStorage.getItem('sofiPackData');
-        if (saved) {
-            const data = JSON.parse(saved);
-            for (const id in data) {
-                const el = document.getElementById(id);
-                if (el) el.value = data[id];
+            // حساب العجز البري
+            const landQty = parseFloat(row.querySelector('.landQty').value);
+            const landDate = new Date(row.querySelector('.landDate').value);
+            if(landDate > stockDepletionDate) {
+                const diffDays = (landDate - stockDepletionDate) / (1000 * 60 * 60 * 24);
+                const gap = diffDays * dailyReq;
+                row.querySelector('.gapLand').innerText = Math.ceil(gap) + " طن";
+                row.querySelector('.gapLand').classList.add('shortage');
+            } else {
+                row.querySelector('.gapLand').innerText = "كافية";
+                row.querySelector('.gapLand').classList.remove('shortage');
             }
-            calculateAll();
-        }
+
+            // حساب العجز البحري
+            const seaQty = parseFloat(row.querySelector('.seaQty').value);
+            const seaDate = new Date(row.querySelector('.seaDate').value);
+            const totalStockAfterLand = stock + landQty;
+            const finalDepletionDate = new Date(baseDate);
+            finalDepletionDate.setDate(finalDepletionDate.getDate() + (totalStockAfterLand / dailyReq));
+
+            if(seaDate > finalDepletionDate) {
+                const diffDays = (seaDate - finalDepletionDate) / (1000 * 60 * 60 * 24);
+                const gap = diffDays * dailyReq;
+                row.querySelector('.gapSea').innerText = Math.ceil(gap) + " طن";
+                row.querySelector('.gapSea').classList.add('shortage');
+            } else {
+                row.querySelector('.gapSea').innerText = "كافية";
+                row.querySelector('.gapSea').classList.remove('shortage');
+            }
+        });
     }
 
-    // بدء البرنامج
-    window.addEventListener('DOMContentLoaded', init);
+    // إضافة صف افتراضي عند البدء
+    addRow();
 </script>
-
 </body>
 </html>
