@@ -2,128 +2,200 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>نظام إدارة سلاسل الإمداد - المتقدم</title>
+    <title>نظام MRP المتقدم والتقارير - سوفي باك</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { color: #2c3e50; text-align: center; }
-        .controls { background: #eef2f3; padding: 15px; margin-bottom: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        th { background: #34495e; color: white; padding: 10px; text-align: center; }
-        td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        input { width: 90%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
-        .shortage { background-color: #ffcccc !important; color: #b30000; font-weight: bold; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
-        .btn-add { background: #27ae60; }
-        .btn-calc { background: #2980b9; }
-        .btn-del { background: #e74c3c; padding: 5px 10px; }
+        :root { --primary: #2c3e50; --danger: #e74c3c; --success: #27ae60; --accent: #3498db; --warning: #f39c12; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f9; padding: 20px; }
+        .container { max-width: 1500px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .date-picker { background: #e8f4fd; padding: 15px; border-radius: 8px; border: 1px solid var(--accent); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th { background: var(--primary); color: white; padding: 12px; font-size: 13px; }
+        td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        
+        input { border: 1px solid #ccc; padding: 8px; border-radius: 4px; text-align: center; width: 90%; }
+        .status-box { padding: 5px; border-radius: 4px; font-weight: bold; display: block; }
+        .critical { background: #ffdada; color: var(--danger); border: 1px solid var(--danger); }
+        .safe { background: #e9f7ef; color: var(--success); border: 1px solid var(--success); }
+        
+        .btn { cursor: pointer; border: none; border-radius: 5px; padding: 10px 20px; font-weight: bold; transition: 0.3s; margin-left: 5px; }
+        .btn-add { background: var(--success); color: white; }
+        .btn-report { background: var(--warning); color: white; }
+        .btn-calc { background: var(--accent); color: white; width: 100%; margin-top: 20px; font-size: 16px; }
+
+        /* تنسيق التقرير */
+        #reportSection { margin-top: 30px; display: none; padding: 20px; border: 2px dashed var(--primary); border-radius: 10px; background: #fff; }
+        .report-header { text-align: center; color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: 15px; }
+        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .report-card { padding: 15px; border: 1px solid #eee; border-radius: 8px; }
+        .high-alert { color: var(--danger); font-weight: bold; }
+        @media print { .btn, .header-section, .btn-calc { display: none; } #reportSection { display: block !important; border: none; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>نظام تخطيط الاحتياجات والمشتريات (MRP)</h2>
-    
-    <div class="controls">
-        <label>تاريخ مرجع المخزون: </label>
-        <input type="date" id="baseDate" style="width: 150px;">
-        <button class="btn btn-add" onclick="addRow()">+ إضافة خامة</button>
-        <button class="btn btn-calc" onclick="calculate()">🔄 حساب الموقف (MRP)</button>
+    <div class="header-section">
+        <h2>لوحة التحكم في سلاسل الإمداد - سوفي باك</h2>
+        <div class="date-picker">
+            <label><strong>تاريخ الجرد المرجعي: </strong></label>
+            <input type="date" id="inventoryDate" onchange="calculateMRP()">
+        </div>
+        <div>
+            <button class="btn btn-add" onclick="addNewMaterial()">+ خامة جديدة</button>
+            <button class="btn btn-report" onclick="generateReport()">📋 عرض التقرير العام</button>
+        </div>
     </div>
 
     <table id="mrpTable">
         <thead>
             <tr>
-                <th>المادة الخام</th>
-                <th>الطاقة (طن)</th>
-                <th>النسبة %</th>
+                <th>الخامة</th>
+                <th>طاقة/نسبة</th>
                 <th>يومي</th>
-                <th>المخزون الحالي</th>
-                <th>تعاقد (بري)</th>
-                <th>تاريخ وصول (بري)</th>
-                <th>تعاقد (بحري)</th>
-                <th>تاريخ وصول (بحري)</th>
-                <th>العجز (بري)</th>
-                <th>العجز (بحري)</th>
-                <th>-</th>
+                <th>المخزون</th>
+                <th>التعاقد البري / الموعد</th>
+                <th>فجوة البري</th>
+                <th>التعاقد البحري / الموعد</th>
+                <th>فجوة البحري</th>
+                <th>التغطية النهائية</th>
             </tr>
         </thead>
-        <tbody id="tableBody">
-            </tbody>
+        <tbody id="tableBody"></tbody>
     </table>
+
+    <button class="btn btn-calc" onclick="calculateMRP()">🔄 تحديث كافة البيانات</button>
+
+    <div id="reportSection">
+        <div class="report-header">
+            <h3>تقرير حالة المخزون والاحتياجات العاجلة</h3>
+            <p id="reportDateText"></p>
+        </div>
+        <div class="report-grid">
+            <div class="report-card">
+                <h4>🚨 تنبيهات العجز (مطلوب شراء محلي)</h4>
+                <ul id="shortageList"></ul>
+            </div>
+            <div class="report-card">
+                <h4>📅 جدول نفاذ الخامات (Timeline)</h4>
+                <ul id="timelineList"></ul>
+            </div>
+        </div>
+        <div style="margin-top:20px; text-align: left;">
+            <button class="btn btn-calc" style="width:auto;" onclick="window.print()">🖨️ طباعة التقرير (PDF)</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    function addRow() {
+    document.getElementById('inventoryDate').valueAsDate = new Date();
+
+    function addNewMaterial() {
         const tbody = document.getElementById('tableBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="text" placeholder="اسم الخامة"></td>
-            <td><input type="number" class="cap" value="480"></td>
-            <td><input type="number" class="ratio" value="10"></td>
-            <td class="dailyReq">0</td>
-            <td><input type="number" class="stock" value="0"></td>
-            <td><input type="number" class="landQty" value="0"></td>
-            <td><input type="date" class="landDate"></td>
-            <td><input type="number" class="seaQty" value="0"></td>
-            <td><input type="date" class="seaDate"></td>
-            <td class="gapLand">-</td>
-            <td class="gapSea">-</td>
-            <td><button class="btn btn-del" onclick="this.parentElement.parentElement.remove()">X</button></td>
-        `;
-        tbody.appendChild(row);
+        const row = `
+            <tr class="mat-row">
+                <td><input type="text" class="mat-name" value="خامة جديدة"></td>
+                <td>
+                    <input type="number" class="cap" value="480" style="width:60px">
+                    <input type="number" class="ratio" value="100" style="width:40px">%
+                </td>
+                <td class="daily-val">0</td>
+                <td><input type="number" class="stock-qty" value="0"></td>
+                <td>
+                    <input type="number" class="land-qty" value="0">
+                    <input type="date" class="land-date">
+                </td>
+                <td class="land-gap-result">---</td>
+                <td>
+                    <input type="number" class="sea-qty" value="0">
+                    <input type="date" class="sea-date">
+                </td>
+                <td class="sea-gap-result">---</td>
+                <td class="final-status">---</td>
+            </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+        calculateMRP();
     }
 
-    function calculate() {
-        const baseDate = new Date(document.getElementById('baseDate').value || new Date());
-        const rows = document.querySelectorAll('#tableBody tr');
+    function calculateMRP() {
+        const baseDate = new Date(document.getElementById('inventoryDate').value);
+        const rows = document.querySelectorAll('.mat-row');
 
         rows.forEach(row => {
-            const cap = parseFloat(row.querySelector('.cap').value);
-            const ratio = parseFloat(row.querySelector('.ratio').value) / 100;
-            const stock = parseFloat(row.querySelector('.stock').value);
-            
+            const cap = parseFloat(row.querySelector('.cap').value) || 0;
+            const ratio = (parseFloat(row.querySelector('.ratio').value) || 0) / 100;
             const dailyReq = (cap / 30) * ratio;
-            row.querySelector('.dailyReq').innerText = dailyReq.toFixed(2);
+            row.querySelector('.daily-val').innerText = dailyReq.toFixed(2);
 
-            const daysStockCover = stock / dailyReq;
-            const stockDepletionDate = new Date(baseDate);
-            stockDepletionDate.setDate(stockDepletionDate.getDate() + daysStockCover);
+            const stock = parseFloat(row.querySelector('.stock-qty').value) || 0;
+            const landQty = parseFloat(row.querySelector('.land-qty').value) || 0;
+            const landDateVal = row.querySelector('.land-date').value;
+            const seaQty = parseFloat(row.querySelector('.sea-qty').value) || 0;
+            const seaDateVal = row.querySelector('.sea-date').value;
 
-            // حساب العجز البري
-            const landQty = parseFloat(row.querySelector('.landQty').value);
-            const landDate = new Date(row.querySelector('.landDate').value);
-            if(landDate > stockDepletionDate) {
-                const diffDays = (landDate - stockDepletionDate) / (1000 * 60 * 60 * 24);
-                const gap = diffDays * dailyReq;
-                row.querySelector('.gapLand').innerText = Math.ceil(gap) + " طن";
-                row.querySelector('.gapLand').classList.add('shortage');
-            } else {
-                row.querySelector('.gapLand').innerText = "كافية";
-                row.querySelector('.gapLand').classList.remove('shortage');
-            }
+            if (dailyReq > 0) {
+                const stockExpiry = new Date(baseDate);
+                stockExpiry.setDate(stockExpiry.getDate() + Math.floor(stock / dailyReq));
+                row.dataset.expiry = stockExpiry;
 
-            // حساب العجز البحري
-            const seaQty = parseFloat(row.querySelector('.seaQty').value);
-            const seaDate = new Date(row.querySelector('.seaDate').value);
-            const totalStockAfterLand = stock + landQty;
-            const finalDepletionDate = new Date(baseDate);
-            finalDepletionDate.setDate(finalDepletionDate.getDate() + (totalStockAfterLand / dailyReq));
+                // فجوة البري
+                if (landDateVal) {
+                    const landArrival = new Date(landDateVal);
+                    if (landArrival > stockExpiry) {
+                        const gap = ((landArrival - stockExpiry) / 86400000) * dailyReq;
+                        row.querySelector('.land-gap-result').innerHTML = `<div class="status-box critical">عجز: ${Math.ceil(gap)} طن</div>`;
+                        row.dataset.landGap = Math.ceil(gap);
+                    } else {
+                        row.querySelector('.land-gap-result').innerHTML = `<div class="status-box safe">مغطى</div>`;
+                        row.dataset.landGap = 0;
+                    }
+                }
 
-            if(seaDate > finalDepletionDate) {
-                const diffDays = (seaDate - finalDepletionDate) / (1000 * 60 * 60 * 24);
-                const gap = diffDays * dailyReq;
-                row.querySelector('.gapSea').innerText = Math.ceil(gap) + " طن";
-                row.querySelector('.gapSea').classList.add('shortage');
-            } else {
-                row.querySelector('.gapSea').innerText = "كافية";
-                row.querySelector('.gapSea').classList.remove('shortage');
+                // التغطية النهائية
+                const finalDays = (stock + landQty + seaQty) / dailyReq;
+                let finalDate = new Date(baseDate);
+                finalDate.setDate(finalDate.getDate() + Math.floor(finalDays));
+                row.querySelector('.final-status').innerHTML = `<strong>${finalDate.toLocaleDateString('ar-EG')}</strong>`;
             }
         });
     }
 
-    // إضافة صف افتراضي عند البدء
-    addRow();
+    function generateReport() {
+        calculateMRP();
+        const reportSection = document.getElementById('reportSection');
+        const shortageList = document.getElementById('shortageList');
+        const timelineList = document.getElementById('timelineList');
+        const baseDate = document.getElementById('inventoryDate').value;
+        
+        reportSection.style.display = 'block';
+        shortageList.innerHTML = '';
+        timelineList.innerHTML = '';
+        document.getElementById('reportDateText').innerText = `بناءً على مخزون تاريخ: ${baseDate}`;
+
+        const rows = document.querySelectorAll('.mat-row');
+        rows.forEach(row => {
+            const name = row.querySelector('.mat-name').value;
+            const landGap = parseFloat(row.dataset.landGap) || 0;
+            const expiry = new Date(row.dataset.expiry).toLocaleDateString('ar-EG');
+
+            // إضافة للعجز
+            if (landGap > 0) {
+                shortageList.innerHTML += `<li class="high-alert">خامة [${name}]: مطلوب توفير ${landGap} طن فوراً لتغطية الفجوة حتى وصول الشحنة البرية.</li>`;
+            }
+
+            // إضافة للجدول الزمني
+            timelineList.innerHTML += `<li>خامة [${name}]: ينتهي المخزون الحالي بتاريخ <strong>${expiry}</strong>.</li>`;
+        });
+
+        if(shortageList.innerHTML === '') shortageList.innerHTML = '<li style="color:green">لا يوجد عجز حالي، جميع الشحنات تصل في الموعد.</li>';
+        
+        reportSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    addNewMaterial();
 </script>
+
 </body>
 </html>
