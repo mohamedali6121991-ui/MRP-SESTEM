@@ -1,101 +1,316 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="mainHtml">
 <head>
     <meta charset="UTF-8">
-    <title>نظام MRP الاحترافي - إدارة فجوات التوريد</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRP System - Mohamed Mohamed Ali</title>
     <style>
-        :root { --dark: #1e293b; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --warning: #f59e0b; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; padding: 20px; color: var(--dark); }
-        .container { max-width: 100%; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; }
-        .config-box { background: #eff6ff; padding: 15px; border-radius: 10px; border: 1px solid #dbeafe; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
-        th { background: var(--dark); color: white; padding: 12px; border: 1px solid #334155; }
-        td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
-        
-        .machine-header { background: #f1f5f9; padding: 15px; font-weight: bold; font-size: 1.2em; border-right: 5px solid var(--primary); margin-top: 20px; display: flex; justify-content: space-between; }
-        
-        input { border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px; text-align: center; width: 70px; transition: 0.3s; }
-        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 5px rgba(59,130,246,0.3); }
-        input[type="date"] { width: 135px; }
+        :root {
+            --primary: #4f46e5;
+            --secondary: #0ea5e9;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
 
-        .highlight-days { color: var(--primary); font-weight: bold; display: block; }
-        .expiry-date { font-size: 0.85em; color: #64748b; }
-        .gap-alert { background: #fee2e2; color: var(--danger); padding: 5px; border-radius: 4px; border: 1px solid #fecaca; font-weight: bold; font-size: 0.9em; }
-        .covered { color: var(--success); font-weight: bold; }
-        
-        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header Styling */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .brand-box h1 {
+            margin: 0;
+            color: var(--dark);
+            font-size: 24px;
+        }
+
+        .author-tag {
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            color: white;
+        }
+
+        .btn-lang { background: var(--dark); }
         .btn-save { background: var(--success); }
         .btn-report { background: var(--warning); }
-        .btn-print { background: var(--dark); }
 
-        @media print { .btn, .config-box, input { display: none; } .container { box-shadow: none; } }
+        .config-card {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: inline-block;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Table Styling */
+        .machine-block {
+            margin-bottom: 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .machine-title {
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #64748b;
+            padding: 12px;
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        input {
+            border: 1px solid #cbd5e1;
+            padding: 6px;
+            border-radius: 6px;
+            text-align: center;
+            width: 80px;
+        }
+
+        input[type="date"] { width: 130px; }
+
+        .gap-alert {
+            background: #fff1f2;
+            color: var(--danger);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            border: 1px solid #ffe4e6;
+        }
+
+        .covered { color: var(--success); font-weight: bold; }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Report Section */
+        #reportSection {
+            display: none;
+            background: #fff;
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        @media print {
+            .btn, .config-card, input { display: none; }
+            .container { box-shadow: none; border: none; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <div>
-            <h1 style="margin:0; color: var(--dark);">نظام تخطيط الاحتياجات (MRP)</h1>
-            <div class="config-box" style="margin-top:10px;">
-                <label>📅 تاريخ الجرد الحالي: </label>
-                <input type="date" id="baseDate" onchange="calculateAll()">
-            </div>
+        <div class="brand-box">
+            <h1 id="ui-title">نظام تخطيط الاحتياجات (MRP)</h1>
+            <div class="author-tag" id="ui-author">بواسطة: محمد محمد علي - مدير إدارة الإمداد والتوريد</div>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn btn-save" onclick="saveData()">💾 حفظ البيانات</button>
-            <button class="btn btn-report" onclick="generateReport()">📊 تقرير الأزمات</button>
+        <div class="controls">
+            <button class="btn btn-lang" onclick="toggleLang()">🌐 English</button>
+            <button class="btn btn-save" onclick="saveData()">💾 <span id="ui-save">حفظ</span></button>
+            <button class="btn btn-report" onclick="generateReport()">📊 <span id="ui-gen-report">التقرير</span></button>
         </div>
+    </div>
+
+    <div class="config-card">
+        <label id="ui-base-date-label">📅 تاريخ بداية الحساب (الجرد): </label>
+        <input type="date" id="baseDate" onchange="calculateAll()">
     </div>
 
     <div id="content"></div>
 
-    <div id="reportSection" style="display:none; margin-top:40px; padding:25px; border:2px solid var(--danger); border-radius:15px; background: #fff5f5;">
-        <h2 style="color:var(--danger); text-align:center; border-bottom: 2px solid var(--danger); padding-bottom: 10px;">🚨 ملخص العجز والفجوات الزمنية</h2>
-        <div id="reportContent" style="columns: 2; column-gap: 30px;"></div>
-        <div style="text-align: center; margin-top: 20px;">
-            <button class="btn btn-print" onclick="window.print()">🖨️ طباعة التقرير للمدير</button>
+    <div id="reportSection">
+        <h2 id="ui-report-title" style="text-align:center; color:var(--primary);">تقرير العجز التشغيلي</h2>
+        <div id="reportContent" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;"></div>
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn btn-lang" style="display: inline-block;" onclick="window.print()">🖨️ طباعة التقرير</button>
         </div>
+    </div>
+
+    <div class="footer">
+        Developed by <b>Mohamed Mohamed Ali</b> | Supply Chain Manager &copy; 2026
     </div>
 </div>
 
 <script>
+    let currentLang = 'ar';
+
+    const langData = {
+        ar: {
+            title: "نظام تخطيط الاحتياجات (MRP)",
+            author: "بواسطة: محمد محمد علي - مدير إدارة الإمداد والتوريد",
+            save: "حفظ البيانات",
+            genReport: "تقرير الأزمات",
+            baseDateLabel: "📅 تاريخ بداية الحساب (الجرد): ",
+            monthlyCap: "الطاقة الشهرية",
+            colMat: "الخامة",
+            colRatio: "النسبة %",
+            colDaily: "استهلاك يومي",
+            colStock: "المخزن (طن)",
+            colCoverage: "كفاية المخزن",
+            colLand: "وصول بري (طن/تاريخ)",
+            colLandGap: "فجوة البري",
+            colSea: "وصول بحري (طن/تاريخ)",
+            colSeaGap: "فجوة البحري",
+            ton: "طن",
+            day: "يوم",
+            gap: "عجز",
+            covered: "✅ مغطى",
+            reportTitle: "🚨 ملخص العجز والفجوات الزمنية",
+            noIssues: "جميع الخامات مغطاة بالتعاقدات الحالية."
+        },
+        en: {
+            title: "MRP Requirements Planning System",
+            author: "By: Mohamed Mohamed Ali - Supply Chain Manager",
+            save: "Save Data",
+            genReport: "Crisis Report",
+            baseDateLabel: "📅 Inventory Base Date: ",
+            monthlyCap: "Monthly Capacity",
+            colMat: "Material",
+            colRatio: "Ratio %",
+            colDaily: "Daily Usage",
+            colStock: "Stock (Ton)",
+            colCoverage: "Stock Coverage",
+            colLand: "Land Supply (Qty/Date)",
+            colLandGap: "Land Gap",
+            colSea: "Sea Supply (Qty/Date)",
+            colSeaGap: "Sea Gap",
+            ton: "Ton",
+            day: "Day",
+            gap: "Shortage",
+            covered: "✅ Covered",
+            reportTitle: "🚨 Shortage & Time Gap Summary",
+            noIssues: "All materials are covered by current contracts."
+        }
+    };
+
     const machines = [
-        { name: "خط أفلام PP", cap: 480, mats: ["HOMO", "CO Polymer", "AS", "AB", "SLIP", "MB white"] },
-        { name: "خط أفلام PE", cap: 240, mats: ["LLDPE M1", "LLDPE M2", "LDPE 0.75", "LDPE 2", "Metallocene", "AS", "AB", "SLIP", "PR", "MB White"] },
-        { name: "ماكينة غطاء CSD", cap: 150, mats: ["HDPE", "Color MB"] },
-        { name: "ماكينة غطاء WD", cap: 88, mats: ["HDPE", "Color MB"] },
-        { name: "خط شيت PP", cap: 180, mats: ["Homo", "تكسير PP", "تلك", "Color MB"] },
-        { name: "خط شيت PET", cap: 200, mats: ["PET", "فلاكس", "تكسير"] }
+        { name: {ar: "خط أفلام PP", en: "PP Films Line"}, cap: 480, mats: ["HOMO", "CO Polymer", "AS", "AB", "SLIP", "MB white"] },
+        { name: {ar: "خط أفلام PE", en: "PE Films Line"}, cap: 240, mats: ["LLDPE M1", "LLDPE M2", "LDPE 0.75", "LDPE 2", "Metallocene", "AS", "AB", "SLIP", "PR", "MB White"] },
+        { name: {ar: "ماكينة غطاء CSD", en: "CSD Caps M/C"}, cap: 150, mats: ["HDPE", "Color MB"] },
+        { name: {ar: "ماكينة غطاء WD", en: "WD Caps M/C"}, cap: 88, mats: ["HDPE", "Color MB"] },
+        { name: {ar: "خط شيت PP", en: "PP Sheet Line"}, cap: 180, mats: ["Homo", "تكسير PP", "تلك", "Color MB"] },
+        { name: {ar: "خط شيت PET", en: "PET Sheet Line"}, cap: 200, mats: ["PET", "Flakes", "Crushed"] }
     ];
 
-    // تهيئة التاريخ الافتراضي لليوم
-    document.getElementById('baseDate').valueAsDate = new Date();
+    function toggleLang() {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        document.getElementById('mainHtml').dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        document.getElementById('mainHtml').lang = currentLang;
+        updateUI();
+        setup(); 
+    }
+
+    function updateUI() {
+        const l = langData[currentLang];
+        document.getElementById('ui-title').innerText = l.title;
+        document.getElementById('ui-author').innerText = l.author;
+        document.getElementById('ui-save').innerText = l.save;
+        document.getElementById('ui-gen-report').innerText = l.genReport;
+        document.getElementById('ui-base-date-label').innerText = l.baseDateLabel;
+        document.getElementById('ui-report-title').innerText = l.reportTitle;
+        document.querySelector('.btn-lang').innerText = currentLang === 'ar' ? '🌐 English' : '🌐 العربية';
+    }
 
     function setup() {
         const board = document.getElementById('content');
+        board.innerHTML = "";
+        const l = langData[currentLang];
+
         machines.forEach((m, mIdx) => {
             let html = `
-                <div class="machine-block" style="margin-bottom:30px;">
-                    <div class="machine-header">
-                        <span>🏭 ${m.name}</span>
-                        <span style="font-size: 0.8em;">الطاقة الشهرية: <input type="number" id="cap-${mIdx}" value="${m.cap}" oninput="calculateAll()"> طن</span>
+                <div class="machine-block">
+                    <div class="machine-title">
+                        <span>🏭 ${m.name[currentLang]}</span>
+                        <span>${l.monthlyCap}: <input type="number" id="cap-${mIdx}" value="${m.cap}" oninput="calculateAll()"> ${l.ton}</span>
                     </div>
                     <table>
                         <thead>
                             <tr>
-                                <th width="150">الخامة</th>
-                                <th>النسبة %</th>
-                                <th>استهلاك يومي</th>
-                                <th>المخزن (طن)</th>
-                                <th>كفاية المخزن</th>
-                                <th>وصول بري (كمية/تاريخ)</th>
-                                <th>فجوة البري</th>
-                                <th>وصول بحري (كمية/تاريخ)</th>
-                                <th>فجوة البحري</th>
+                                <th>${l.colMat}</th>
+                                <th>${l.colRatio}</th>
+                                <th>${l.colDaily}</th>
+                                <th>${l.colStock}</th>
+                                <th>${l.colCoverage}</th>
+                                <th>${l.colLand}</th>
+                                <th>${l.colLandGap}</th>
+                                <th>${l.colSea}</th>
+                                <th>${l.colSeaGap}</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -104,18 +319,18 @@
                 const id = `${mIdx}-${matIdx}`;
                 html += `
                     <tr>
-                        <td style="text-align:right"><b>${mat}</b></td>
+                        <td style="font-weight:bold">${mat}</td>
                         <td><input type="number" id="ratio-${id}" value="0" oninput="calculateAll()"></td>
-                        <td id="daily-${id}" style="background:#f8fafc">0</td>
-                        <td><input type="number" id="stock-${id}" value="0" oninput="calculateAll()" style="background:#fff7ed"></td>
+                        <td id="daily-${id}">0</td>
+                        <td><input type="number" id="stock-${id}" value="0" oninput="calculateAll()"></td>
                         <td id="stock-result-${id}">-</td>
                         <td>
-                            <input type="number" id="lqty-${id}" placeholder="كمية" oninput="calculateAll()">
+                            <input type="number" id="lqty-${id}" oninput="calculateAll()">
                             <input type="date" id="ldate-${id}" onchange="calculateAll()">
                         </td>
                         <td id="lgap-${id}">-</td>
                         <td>
-                            <input type="number" id="sqty-${id}" placeholder="كمية" oninput="calculateAll()">
+                            <input type="number" id="sqty-${id}" oninput="calculateAll()">
                             <input type="date" id="sdate-${id}" onchange="calculateAll()">
                         </td>
                         <td id="sgap-${id}">-</td>
@@ -128,6 +343,7 @@
     }
 
     function calculateAll() {
+        const l = langData[currentLang];
         const baseDateVal = document.getElementById('baseDate').value;
         if (!baseDateVal) return;
         const baseDate = new Date(baseDateVal);
@@ -139,63 +355,45 @@
             m.mats.forEach((mat, matIdx) => {
                 const id = `${mIdx}-${matIdx}`;
                 const ratio = (parseFloat(document.getElementById(`ratio-${id}`).value) || 0) / 100;
-                const dReq = dailyCap * ratio; 
-                
-                document.getElementById(`daily-${id}`).innerText = dReq.toFixed(3);
+                const dReq = dailyCap * ratio;
+                document.getElementById(`daily-${id}`).innerText = dReq.toFixed(2);
 
                 if (dReq > 0) {
                     const stock = parseFloat(document.getElementById(`stock-${id}`).value) || 0;
-                    const lQty = parseFloat(document.getElementById(`lqty-${id}`).value) || 0;
-                    const lDateVal = document.getElementById(`ldate-${id}`).value;
-                    const sQty = parseFloat(document.getElementById(`sqty-${id}`).value) || 0;
-                    const sDateVal = document.getElementById(`sdate-${id}`).value;
-
-                    // 1. حساب كفاية المخزن الحالي
                     const stockDays = Math.floor(stock / dReq);
-                    const stockExpiryDate = new Date(baseDate);
-                    stockExpiryDate.setDate(stockExpiryDate.getDate() + stockDays);
-                    
-                    document.getElementById(`stock-result-${id}`).innerHTML = `
-                        <span class="highlight-days">${stockDays} يوم</span>
-                        <span class="expiry-date">ينتهي: ${stockExpiryDate.toLocaleDateString('ar-EG')}</span>`;
+                    const stockExpiry = new Date(baseDate);
+                    stockExpiry.setDate(stockExpiry.getDate() + stockDays);
 
-                    // 2. تحليل فجوة البري
+                    document.getElementById(`stock-result-${id}`).innerHTML = `<b>${stockDays} ${l.day}</b><br><small>${stockExpiry.toLocaleDateString()}</small>`;
+
+                    // Land Logic
+                    const lQty = parseFloat(document.getElementById(`lqty-${id}`).value) || 0;
+                    const lDate = document.getElementById(`ldate-${id}`).value;
                     const lGapCell = document.getElementById(`lgap-${id}`);
-                    if (lDateVal) {
-                        const lArrDate = new Date(lDateVal);
-                        if (lArrDate > stockExpiryDate) {
-                            const diffMs = lArrDate - stockExpiryDate;
-                            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-                            const shortage = (diffDays * dReq).toFixed(2);
-                            lGapCell.innerHTML = `<div class="gap-alert">عجز ${shortage} طن (${diffDays} يوم)</div>`;
-                        } else {
-                            lGapCell.innerHTML = `<span class="covered">✅ مغطى</span>`;
-                        }
-                    } else { lGapCell.innerText = "-"; }
+                    
+                    if (lDate) {
+                        const lArr = new Date(lDate);
+                        if (lArr > stockExpiry) {
+                            const gapDays = Math.ceil((lArr - stockExpiry) / 86400000);
+                            lGapCell.innerHTML = `<div class="gap-alert">${l.gap} ${(gapDays * dReq).toFixed(1)} ${l.ton}</div>`;
+                        } else { lGapCell.innerHTML = `<span class="covered">${l.covered}</span>`; }
+                    }
 
-                    // 3. تحليل فجوة البحري (تراكمي: مخزن + بري)
-                    const sGapCell = document.getElementById(`sgap-${id}`);
+                    // Sea Logic (Cumulative)
                     const totalAfterLand = stock + lQty;
                     const landExpiryDays = Math.floor(totalAfterLand / dReq);
                     const landExpiryDate = new Date(baseDate);
                     landExpiryDate.setDate(landExpiryDate.getDate() + landExpiryDays);
 
-                    if (sDateVal) {
-                        const sArrDate = new Date(sDateVal);
-                        if (sArrDate > landExpiryDate) {
-                            const diffMs = sArrDate - landExpiryDate;
-                            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-                            const shortage = (diffDays * dReq).toFixed(2);
-                            sGapCell.innerHTML = `<div class="gap-alert">عجز ${shortage} طن (${diffDays} يوم)</div>`;
-                        } else {
-                            sGapCell.innerHTML = `<span class="covered">✅ مغطى</span>`;
-                        }
-                    } else { sGapCell.innerText = "-"; }
-                } else {
-                    // تصقير النتائج إذا لم يوجد استهلاك
-                    document.getElementById(`stock-result-${id}`).innerText = "-";
-                    document.getElementById(`lgap-${id}`).innerText = "-";
-                    document.getElementById(`sgap-${id}`).innerText = "-";
+                    const sDate = document.getElementById(`sdate-${id}`).value;
+                    const sGapCell = document.getElementById(`sgap-${id}`);
+                    if (sDate) {
+                        const sArr = new Date(sDate);
+                        if (sArr > landExpiryDate) {
+                            const gapDays = Math.ceil((sArr - landExpiryDate) / 86400000);
+                            sGapCell.innerHTML = `<div class="gap-alert">${l.gap} ${(gapDays * dReq).toFixed(1)} ${l.ton}</div>`;
+                        } else { sGapCell.innerHTML = `<span class="covered">${l.covered}</span>`; }
+                    }
                 }
             });
         });
@@ -203,58 +401,53 @@
 
     function generateReport() {
         calculateAll();
+        const l = langData[currentLang];
         const report = document.getElementById('reportSection');
         const content = document.getElementById('reportContent');
         report.style.display = 'block';
         content.innerHTML = "";
-
-        let issuesFound = false;
+        let hasGap = false;
 
         machines.forEach((m, mIdx) => {
             m.mats.forEach((mat, matIdx) => {
                 const id = `${mIdx}-${matIdx}`;
-                const lGap = document.getElementById(`lgap-${id}`).innerHTML;
-                const sGap = document.getElementById(`sgap-${id}`).innerHTML;
-                
-                if (lGap.includes("عجز") || sGap.includes("عجز")) {
-                    issuesFound = true;
-                    let text = `<div style="margin-bottom:15px; padding:10px; border-bottom:1px solid #ddd;">`;
-                    text += `<strong>⚠️ ${m.name} - ${mat}</strong><br>`;
-                    if (lGap.includes("عجز")) text += `<span style="color:red">فجوة البري: ${lGap}</span><br>`;
-                    if (sGap.includes("عجز")) text += `<span style="color:red">فجوة البحري: ${sGap}</span>`;
-                    text += `</div>`;
-                    content.innerHTML += text;
+                const lGap = document.getElementById(`lgap-${id}`).innerText;
+                const sGap = document.getElementById(`sgap-${id}`).innerText;
+
+                if (lGap.includes(l.gap) || sGap.includes(l.gap)) {
+                    hasGap = true;
+                    content.innerHTML += `
+                        <div style="border: 1px solid #fee2e2; padding: 15px; border-radius: 10px; background: #fffcfc;">
+                            <b style="color:var(--dark)">${m.name[currentLang]}</b><br>
+                            <span style="color:var(--primary)">${mat}</span><br>
+                            <small style="color:red">${lGap.includes(l.gap) ? 'Land: '+lGap : ''} ${sGap.includes(l.gap) ? ' | Sea: '+sGap : ''}</small>
+                        </div>`;
                 }
             });
         });
 
-        if (!issuesFound) {
-            content.innerHTML = "<h3 style='color:var(--success); text-align:center; width:100%'>✅ ممتاز! جميع الخطوط مغطاة بالخامات حتى وصول الشحنات.</h3>";
-        }
-        window.scrollTo({ top: report.offsetTop, behavior: 'smooth' });
+        if (!hasGap) content.innerHTML = `<p style="text-align:center; width:100%; color:var(--success)">${l.noIssues}</p>`;
+        window.scrollTo({top: report.offsetTop, behavior: 'smooth'});
     }
 
     function saveData() {
         const data = {};
-        document.querySelectorAll('input').forEach(i => {
-            if (i.id) data[i.id] = i.value;
-        });
-        localStorage.setItem('MRP_FACTORY_DATA_V3', JSON.stringify(data));
-        alert("✅ تم حفظ كافة البيانات في ذاكرة المتصفح بنجاح!");
+        document.querySelectorAll('input').forEach(i => { if(i.id) data[i.id] = i.value; });
+        localStorage.setItem('MRP_V3_FINAL', JSON.stringify(data));
+        alert(currentLang === 'ar' ? "✅ تم حفظ البيانات!" : "✅ Data Saved!");
     }
 
     function loadData() {
-        const saved = JSON.parse(localStorage.getItem('MRP_FACTORY_DATA_V3'));
+        const saved = JSON.parse(localStorage.getItem('MRP_V3_FINAL'));
         if (saved) {
-            Object.keys(saved).forEach(k => {
-                const el = document.getElementById(k);
-                if (el) el.value = saved[k];
-            });
+            Object.keys(saved).forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = saved[k]; });
             calculateAll();
         }
     }
 
-    // التشغيل الأولي
+    // Initialize
+    document.getElementById('baseDate').valueAsDate = new Date();
+    updateUI();
     setup();
 </script>
 
