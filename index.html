@@ -2,29 +2,36 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>نظام MRP المطور - حسابات التغطية الدقيقة</title>
+    <title>نظام MRP الاحترافي - إدارة فجوات التوريد</title>
     <style>
-        :root { --dark: #1e293b; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 20px; }
-        .container { max-width: 1600px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        :root { --dark: #1e293b; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --warning: #f59e0b; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; padding: 20px; color: var(--dark); }
+        .container { max-width: 100%; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; }
         .config-box { background: #eff6ff; padding: 15px; border-radius: 10px; border: 1px solid #dbeafe; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background: var(--dark); color: white; padding: 12px; font-size: 13px; }
-        td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
+        th { background: var(--dark); color: white; padding: 12px; border: 1px solid #334155; }
+        td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
         
-        input { border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; text-align: center; width: 80px; }
-        input[type="date"] { width: 140px; }
+        .machine-header { background: #f1f5f9; padding: 15px; font-weight: bold; font-size: 1.2em; border-right: 5px solid var(--primary); margin-top: 20px; display: flex; justify-content: space-between; }
+        
+        input { border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px; text-align: center; width: 70px; transition: 0.3s; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 5px rgba(59,130,246,0.3); }
+        input[type="date"] { width: 135px; }
 
-        .highlight-days { color: var(--primary); font-weight: bold; font-size: 1.1em; }
-        .expiry-date { color: #555; background: #f8fafc; padding: 4px; border-radius: 4px; display: block; margin-top: 5px; }
-        .gap-alert { background: #fee2e2; color: var(--danger); padding: 8px; border-radius: 6px; border: 1px solid #fecaca; font-weight: bold; }
+        .highlight-days { color: var(--primary); font-weight: bold; display: block; }
+        .expiry-date { font-size: 0.85em; color: #64748b; }
+        .gap-alert { background: #fee2e2; color: var(--danger); padding: 5px; border-radius: 4px; border: 1px solid #fecaca; font-weight: bold; font-size: 0.9em; }
+        .covered { color: var(--success); font-weight: bold; }
         
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-save { background: var(--success); }
-        .btn-report { background: #f59e0b; }
+        .btn-report { background: var(--warning); }
+        .btn-print { background: var(--dark); }
+
+        @media print { .btn, .config-box, input { display: none; } .container { box-shadow: none; } }
     </style>
 </head>
 <body>
@@ -32,78 +39,83 @@
 <div class="container">
     <div class="header">
         <div>
-            <h2 style="margin:0; color: var(--dark);">نظام إدارة الإمداد والاحتياجات الزمنية</h2>
+            <h1 style="margin:0; color: var(--dark);">نظام تخطيط الاحتياجات (MRP)</h1>
             <div class="config-box" style="margin-top:10px;">
-                <label>تاريخ بداية الحساب (الجرد): </label>
+                <label>📅 تاريخ الجرد الحالي: </label>
                 <input type="date" id="baseDate" onchange="calculateAll()">
             </div>
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-save" onclick="saveData()">💾 حفظ البيانات</button>
-            <button class="btn btn-report" onclick="generateReport()">📊 تقرير العجز</button>
+            <button class="btn btn-report" onclick="generateReport()">📊 تقرير الأزمات</button>
         </div>
     </div>
 
     <div id="content"></div>
 
-    <div id="reportSection" style="display:none; margin-top:30px; padding:20px; border:2px dashed var(--dark); border-radius:10px;">
-        <h3 style="color:var(--danger); text-align:center;">🚨 تنبيهات الفجوات الزمنية والكميات المطلوبة</h3>
-        <div id="reportContent"></div>
+    <div id="reportSection" style="display:none; margin-top:40px; padding:25px; border:2px solid var(--danger); border-radius:15px; background: #fff5f5;">
+        <h2 style="color:var(--danger); text-align:center; border-bottom: 2px solid var(--danger); padding-bottom: 10px;">🚨 ملخص العجز والفجوات الزمنية</h2>
+        <div id="reportContent" style="columns: 2; column-gap: 30px;"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="btn btn-print" onclick="window.print()">🖨️ طباعة التقرير للمدير</button>
+        </div>
     </div>
 </div>
 
 <script>
     const machines = [
-        { name: "أفلام PP", cap: 480, mats: ["HOMO", "CO Polymer", "AS", "AB", "SLIP", "MB white"] },
-        { name: "أفلام PE", cap: 240, mats: ["LLDPE M1", "LLDPE M2", "LDPE 0.75", "LDPE 2", "Metallocene", "AS", "AB", "SLIP", "PR", "MB White"] },
-        { name: "غطاء CSD", cap: 150, mats: ["HDPE", "Color MB"] },
-        { name: "غطاء WD", cap: 88, mats: ["HDPE", "Color MB"] },
-        { name: "شيت PP", cap: 180, mats: ["Homo", "تكسير PP", "تلك", "Color MB"] },
-        { name: "شيت PET", cap: 200, mats: ["PET", "فلاكس", "تكسير"] }
+        { name: "خط أفلام PP", cap: 480, mats: ["HOMO", "CO Polymer", "AS", "AB", "SLIP", "MB white"] },
+        { name: "خط أفلام PE", cap: 240, mats: ["LLDPE M1", "LLDPE M2", "LDPE 0.75", "LDPE 2", "Metallocene", "AS", "AB", "SLIP", "PR", "MB White"] },
+        { name: "ماكينة غطاء CSD", cap: 150, mats: ["HDPE", "Color MB"] },
+        { name: "ماكينة غطاء WD", cap: 88, mats: ["HDPE", "Color MB"] },
+        { name: "خط شيت PP", cap: 180, mats: ["Homo", "تكسير PP", "تلك", "Color MB"] },
+        { name: "خط شيت PET", cap: 200, mats: ["PET", "فلاكس", "تكسير"] }
     ];
 
+    // تهيئة التاريخ الافتراضي لليوم
     document.getElementById('baseDate').valueAsDate = new Date();
 
     function setup() {
         const board = document.getElementById('content');
         machines.forEach((m, mIdx) => {
             let html = `
-                <div style="margin-bottom:40px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
-                    <div style="background:#f1f5f9; padding:15px; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:1.2em; font-weight:bold;">🏭 ${m.name}</span>
-                        <span>طاقة شهرية: <input type="number" id="cap-${mIdx}" value="${m.cap}" oninput="calculateAll()"> طن</span>
+                <div class="machine-block" style="margin-bottom:30px;">
+                    <div class="machine-header">
+                        <span>🏭 ${m.name}</span>
+                        <span style="font-size: 0.8em;">الطاقة الشهرية: <input type="number" id="cap-${mIdx}" value="${m.cap}" oninput="calculateAll()"> طن</span>
                     </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>الخامة</th>
+                                <th width="150">الخامة</th>
                                 <th>النسبة %</th>
-                                <th>استهلاك (يومي)</th>
-                                <th>مخزون</th>
-                                <th>تغطية المخزون</th>
-                                <th>بري (كمية/وصول)</th>
+                                <th>استهلاك يومي</th>
+                                <th>المخزن (طن)</th>
+                                <th>كفاية المخزن</th>
+                                <th>وصول بري (كمية/تاريخ)</th>
                                 <th>فجوة البري</th>
-                                <th>بحري (كمية/وصول)</th>
+                                <th>وصول بحري (كمية/تاريخ)</th>
                                 <th>فجوة البحري</th>
                             </tr>
                         </thead>
                         <tbody>`;
+            
             m.mats.forEach((mat, matIdx) => {
                 const id = `${mIdx}-${matIdx}`;
                 html += `
                     <tr>
                         <td style="text-align:right"><b>${mat}</b></td>
                         <td><input type="number" id="ratio-${id}" value="0" oninput="calculateAll()"></td>
-                        <td id="daily-${id}">0</td>
-                        <td><input type="number" id="stock-${id}" value="0" oninput="calculateAll()"></td>
+                        <td id="daily-${id}" style="background:#f8fafc">0</td>
+                        <td><input type="number" id="stock-${id}" value="0" oninput="calculateAll()" style="background:#fff7ed"></td>
                         <td id="stock-result-${id}">-</td>
                         <td>
-                            <input type="number" id="lqty-${id}" value="0" oninput="calculateAll()">
+                            <input type="number" id="lqty-${id}" placeholder="كمية" oninput="calculateAll()">
                             <input type="date" id="ldate-${id}" onchange="calculateAll()">
                         </td>
                         <td id="lgap-${id}">-</td>
                         <td>
-                            <input type="number" id="sqty-${id}" value="0" oninput="calculateAll()">
+                            <input type="number" id="sqty-${id}" placeholder="كمية" oninput="calculateAll()">
                             <input type="date" id="sdate-${id}" onchange="calculateAll()">
                         </td>
                         <td id="sgap-${id}">-</td>
@@ -116,8 +128,10 @@
     }
 
     function calculateAll() {
-        const baseDate = new Date(document.getElementById('baseDate').value);
-        
+        const baseDateVal = document.getElementById('baseDate').value;
+        if (!baseDateVal) return;
+        const baseDate = new Date(baseDateVal);
+
         machines.forEach((m, mIdx) => {
             const monthlyCap = parseFloat(document.getElementById(`cap-${mIdx}`).value) || 0;
             const dailyCap = monthlyCap / 30;
@@ -125,49 +139,63 @@
             m.mats.forEach((mat, matIdx) => {
                 const id = `${mIdx}-${matIdx}`;
                 const ratio = (parseFloat(document.getElementById(`ratio-${id}`).value) || 0) / 100;
-                const dReq = dailyCap * ratio; // الاستهلاك اليومي بناءً على النسبة والماكينة
+                const dReq = dailyCap * ratio; 
                 
-                document.getElementById(`daily-${id}`).innerText = dReq.toFixed(2);
+                document.getElementById(`daily-${id}`).innerText = dReq.toFixed(3);
 
                 if (dReq > 0) {
                     const stock = parseFloat(document.getElementById(`stock-${id}`).value) || 0;
                     const lQty = parseFloat(document.getElementById(`lqty-${id}`).value) || 0;
-                    const lDate = document.getElementById(`ldate-${id}`).value;
+                    const lDateVal = document.getElementById(`ldate-${id}`).value;
                     const sQty = parseFloat(document.getElementById(`sqty-${id}`).value) || 0;
-                    const sDate = document.getElementById(`sdate-${id}`).value;
+                    const sDateVal = document.getElementById(`sdate-${id}`).value;
 
-                    // 1. حساب تغطية المخزون (أيام وتاريخ)
+                    // 1. حساب كفاية المخزن الحالي
                     const stockDays = Math.floor(stock / dReq);
-                    const stockExpiry = new Date(baseDate);
-                    stockExpiry.setDate(stockExpiry.getDate() + stockDays);
-                    document.getElementById(`stock-result-${id}`).innerHTML = 
-                        `<span class="highlight-days">${stockDays} يوم</span>
-                         <span class="expiry-date">${stockExpiry.toLocaleDateString('ar-EG')}</span>`;
+                    const stockExpiryDate = new Date(baseDate);
+                    stockExpiryDate.setDate(stockExpiryDate.getDate() + stockDays);
+                    
+                    document.getElementById(`stock-result-${id}`).innerHTML = `
+                        <span class="highlight-days">${stockDays} يوم</span>
+                        <span class="expiry-date">ينتهي: ${stockExpiryDate.toLocaleDateString('ar-EG')}</span>`;
 
-                    // 2. فجوة البري
+                    // 2. تحليل فجوة البري
                     const lGapCell = document.getElementById(`lgap-${id}`);
-                    if (lDate) {
-                        const lArr = new Date(lDate);
-                        if (lArr > stockExpiry) {
-                            const diffDays = (lArr - stockExpiry) / 86400000;
-                            lGapCell.innerHTML = `<div class="gap-alert">عجز ${Math.ceil(diffDays * dReq)} طن</div>`;
-                        } else { lGapCell.innerHTML = `<b style="color:var(--success)">✅ مغطى</b>`; }
-                    }
+                    if (lDateVal) {
+                        const lArrDate = new Date(lDateVal);
+                        if (lArrDate > stockExpiryDate) {
+                            const diffMs = lArrDate - stockExpiryDate;
+                            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                            const shortage = (diffDays * dReq).toFixed(2);
+                            lGapCell.innerHTML = `<div class="gap-alert">عجز ${shortage} طن (${diffDays} يوم)</div>`;
+                        } else {
+                            lGapCell.innerHTML = `<span class="covered">✅ مغطى</span>`;
+                        }
+                    } else { lGapCell.innerText = "-"; }
 
-                    // 3. فجوة البحري (تراكمي)
+                    // 3. تحليل فجوة البحري (تراكمي: مخزن + بري)
+                    const sGapCell = document.getElementById(`sgap-${id}`);
                     const totalAfterLand = stock + lQty;
                     const landExpiryDays = Math.floor(totalAfterLand / dReq);
                     const landExpiryDate = new Date(baseDate);
                     landExpiryDate.setDate(landExpiryDate.getDate() + landExpiryDays);
 
-                    const sGapCell = document.getElementById(`sgap-${id}`);
-                    if (sDate) {
-                        const sArr = new Date(sDate);
-                        if (sArr > landExpiryDate) {
-                            const diffDays = (sArr - landExpiryDate) / 86400000;
-                            sGapCell.innerHTML = `<div class="gap-alert">عجز ${Math.ceil(diffDays * dReq)} طن</div>`;
-                        } else { sGapCell.innerHTML = `<b style="color:var(--success)">✅ مغطى</b>`; }
-                    }
+                    if (sDateVal) {
+                        const sArrDate = new Date(sDateVal);
+                        if (sArrDate > landExpiryDate) {
+                            const diffMs = sArrDate - landExpiryDate;
+                            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                            const shortage = (diffDays * dReq).toFixed(2);
+                            sGapCell.innerHTML = `<div class="gap-alert">عجز ${shortage} طن (${diffDays} يوم)</div>`;
+                        } else {
+                            sGapCell.innerHTML = `<span class="covered">✅ مغطى</span>`;
+                        }
+                    } else { sGapCell.innerText = "-"; }
+                } else {
+                    // تصقير النتائج إذا لم يوجد استهلاك
+                    document.getElementById(`stock-result-${id}`).innerText = "-";
+                    document.getElementById(`lgap-${id}`).innerText = "-";
+                    document.getElementById(`sgap-${id}`).innerText = "-";
                 }
             });
         });
@@ -180,36 +208,55 @@
         report.style.display = 'block';
         content.innerHTML = "";
 
+        let issuesFound = false;
+
         machines.forEach((m, mIdx) => {
             m.mats.forEach((mat, matIdx) => {
                 const id = `${mIdx}-${matIdx}`;
-                const lGap = document.getElementById(`lgap-${id}`).innerText;
-                const sGap = document.getElementById(`sgap-${id}`).innerText;
+                const lGap = document.getElementById(`lgap-${id}`).innerHTML;
+                const sGap = document.getElementById(`sgap-${id}`).innerHTML;
+                
                 if (lGap.includes("عجز") || sGap.includes("عجز")) {
-                    content.innerHTML += `<p>• <b>${m.name} - ${mat}:</b> مطلوب تدبير عجز <b>${lGap.includes("عجز") ? lGap : sGap}</b> لتفادي توقف الإنتاج.</p>`;
+                    issuesFound = true;
+                    let text = `<div style="margin-bottom:15px; padding:10px; border-bottom:1px solid #ddd;">`;
+                    text += `<strong>⚠️ ${m.name} - ${mat}</strong><br>`;
+                    if (lGap.includes("عجز")) text += `<span style="color:red">فجوة البري: ${lGap}</span><br>`;
+                    if (sGap.includes("عجز")) text += `<span style="color:red">فجوة البحري: ${sGap}</span>`;
+                    text += `</div>`;
+                    content.innerHTML += text;
                 }
             });
         });
-        if(content.innerHTML === "") content.innerHTML = "<h3 style='color:var(--success)'>جميع الخامات مغطاة زمنياً بالتعاقدات الحالية.</h3>";
-        window.scrollTo(0, document.body.scrollHeight);
+
+        if (!issuesFound) {
+            content.innerHTML = "<h3 style='color:var(--success); text-align:center; width:100%'>✅ ممتاز! جميع الخطوط مغطاة بالخامات حتى وصول الشحنات.</h3>";
+        }
+        window.scrollTo({ top: report.offsetTop, behavior: 'smooth' });
     }
 
     function saveData() {
         const data = {};
-        document.querySelectorAll('input').forEach(i => data[i.id] = i.value);
-        localStorage.setItem('MRP_V2_DATA', JSON.stringify(data));
-        alert("تم الحفظ بنجاح!");
+        document.querySelectorAll('input').forEach(i => {
+            if (i.id) data[i.id] = i.value;
+        });
+        localStorage.setItem('MRP_FACTORY_DATA_V3', JSON.stringify(data));
+        alert("✅ تم حفظ كافة البيانات في ذاكرة المتصفح بنجاح!");
     }
 
     function loadData() {
-        const saved = JSON.parse(localStorage.getItem('MRP_V2_DATA'));
+        const saved = JSON.parse(localStorage.getItem('MRP_FACTORY_DATA_V3'));
         if (saved) {
-            Object.keys(saved).forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = saved[k]; });
+            Object.keys(saved).forEach(k => {
+                const el = document.getElementById(k);
+                if (el) el.value = saved[k];
+            });
             calculateAll();
         }
     }
 
+    // التشغيل الأولي
     setup();
 </script>
+
 </body>
 </html>
